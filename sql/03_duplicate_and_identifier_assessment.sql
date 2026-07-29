@@ -281,7 +281,6 @@ Conclusion:
 -- The combination of order_id and payment_sequential can therefore be treated as a unique composite identifier for
 -- payment records within the olist_order_payments_dataset table.
 -- No data cleaning action is required based on the uniqueness of this composite identifier.
--- =============================================================================================================================================================
 
 2.5 DUPLICATE RECORD AND IDENTIFIER UNIQUENESS ASSESSMENT: olist_order_reviews_dataset
 2.5.1 EXACT DUPLICATE RECORD ASSESSMENT
