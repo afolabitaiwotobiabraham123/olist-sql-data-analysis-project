@@ -267,3 +267,29 @@ General Note on NULL Values
 -- The DESCRIBE statement shows that NULL values are allowed in the columns of the tables examined. 
 -- However, this does not confirm that NULL values actually exist in the data.
 -- The actual presence and number of NULL values will be investigated during the Data Quality Assessment phase.
+-- =======================================================================================================================================================
+
+Step 3: Identify Primary Keys, Foreign Keys and Table Relationships
+Table 1: olist_customers_dataset
+Primary Key Identification
+Objective:
+-- Identify the column that uniquely identifies each record in the olist_customers_dataset table.
+SQL Query:
+SELECT
+    COUNT(*) AS total_records,
+    COUNT(DISTINCT customer_id) AS unique_customer_ids
+FROM olist_customers_dataset;
+ Observation:
+-- The olist_customers_dataset table contains 99,441 total records.
+-- The customer_id column also contains 99,441 unique values.
+-- Since the number of unique customer_id values is equal to the total number of records, every record in the table has a unique customer_id value.
+-- Therefore, customer_id is identified as the candidate primary key of the olist_customers_dataset table.
+-- The customer_unique_id column is not identified as the primary key because repeated customer_unique_id values were found during the
+-- identifier uniqueness assessment in the Data Quality Assessment phase.
+-- The customer_unique_id column represents the underlying customer, while customer_id identifies the individual customer record used
+-- within the Olist dataset.
+ Conclusion:
+-- customer_id serves as the primary identifier for records in the olist_customers_dataset table.
+-- Each customer record can therefore be uniquely identified using customer_id.
+
+
