@@ -865,3 +865,152 @@ Overall conclusion:
 -- Its relationship with olist_order_items_dataset was also successfully validated. Every seller referenced by the
 -- order-items table exists in the sellers table, and no NULL, blank, or unmatched seller_id values were identified.
 -- Therefore, the assessed seller relationship demonstrates strong referential integrity within the dataset.
+
+Table 9: product_category_name_translation
+Primary Key, Foreign Key and Relationship Assessment
+9.1 CANDIDATE PRIMARY KEY IDENTIFICATION
+Objective:
+-- Determine whether product_category_name uniquely identifies each record in the product_category_name_translation table.
+SQL Query:
+SELECT
+    COUNT(*) AS total_rows,
+    COUNT(DISTINCT product_category_name) AS unique_category_names
+FROM product_category_name_translation;
+Observation:
+-- The query returned:
+-- total_rows = 71
+-- unique_category_names = 71
+-- The number of unique product_category_name values is equal to the total number of records in the table.
+-- This indicates that no duplicate product_category_name values were identified.
+Conclusion:
+-- product_category_name is identified as a candidate primary key because it uniquely identifies each record in the product_category_name_translation table.
+-- A completeness assessment is required to confirm that the candidate key contains no NULL or blank values.
+
+9.2 PRIMARY KEY COMPLETENESS ASSESSMENT
+ Objective:
+-- Determine whether product_category_name contains NULL or blank values that would prevent it from functioning as a primary key.
+SQL Query:
+SELECT
+    SUM(product_category_name IS NULL) AS null_category_names,
+    SUM(TRIM(product_category_name) = '') AS blank_category_names
+FROM product_category_name_translation;
+Observation:
+-- The query returned:
+-- null_category_names = 0
+-- blank_category_names = 0
+-- This indicates that no NULL or blank product_category_name values were identified in the translation table.
+Conclusion:
+-- product_category_name satisfies both uniqueness and completeness requirements for a primary key.
+-- Therefore, product_category_name is confirmed as the primary key of the product_category_name_translation table.
+
+9.3 FOREIGN KEY / RELATIONSHIP ASSESSMENT
+Objective:
+-- Determine whether every product_category_name in the translation table has a corresponding category in the olist_products_dataset table.
+SQL Query:
+SELECT
+    COUNT(*) AS unmatched_category_names
+FROM product_category_name_translation t
+LEFT JOIN olist_products_dataset p
+    ON t.product_category_name = p.product_category_name
+WHERE p.product_category_name IS NULL;
+Observation:
+-- The query returned: unmatched_category_names = 0
+-- This indicates that every product_category_name recorded in the translation table has a corresponding category in the olist_products_dataset table.
+Conclusion:
+-- product_category_name in the product_category_name_translation table successfully matches categories present in the olist_products_dataset table.
+-- No orphan category records were identified in the translation table.
+-- The relationship was successfully validated in this direction.
+
+9.4 MATCHING CATEGORY ASSESSMENT
+Objective:
+-- Determine how many distinct product categories in the products table have corresponding translations in the product_category_name_translation table.
+SQL Query:
+SELECT
+    COUNT(DISTINCT p.product_category_name) AS translated_category_count
+FROM olist_products_dataset p
+INNER JOIN product_category_name_translation t
+    ON p.product_category_name = t.product_category_name
+WHERE p.product_category_name IS NOT NULL
+  AND TRIM(p.product_category_name) <> '';
+Observation:
+-- The query returned: translated_category_count = 71
+-- This indicates that 71 distinct product categories in the products table have corresponding records in the translation table.
+Conclusion:
+-- All 71 categories contained in the translation table have corresponding category values in the products table.
+-- Therefore, no category records in the translation table are orphaned from the products table.
+
+9.5 UNTRANSLATED CATEGORY ASSESSMENT
+Objective:
+-- Determine whether any actual product categories in the products table are missing from the translation table.
+-- Blank and whitespace-only category values are excluded because they do not represent actual product categories.
+SQL Query:
+SELECT
+    COUNT(DISTINCT p.product_category_name) AS untranslated_category_count
+FROM olist_products_dataset p
+LEFT JOIN product_category_name_translation t
+    ON p.product_category_name = t.product_category_name
+WHERE p.product_category_name IS NOT NULL
+  AND TRIM(p.product_category_name) <> ''
+  AND t.product_category_name IS NULL;
+Observation:
+-- The query returned: untranslated_category_count = 2
+-- This indicates that two actual product category names in the products table do not have corresponding records in the translation table.
+Conclusion:
+-- Two actual product categories are missing from the translation table.
+-- 1. portateis_cozinha_e_preparadores_de_alimentos
+-- 2. pc_gamer
+-- These categories should be considered during subsequent data cleaning and transformation.
+
+9.6 UNTRANSLATED CATEGORY FREQUENCY ASSESSMENT
+Objective:
+-- Determine how many product records belong to each category that is missing from the translation table.
+SQL Query:
+SELECT
+    p.product_category_name,
+    COUNT(*) AS occurrence_count
+FROM olist_products_dataset p
+LEFT JOIN product_category_name_translation t
+    ON p.product_category_name = t.product_category_name
+WHERE p.product_category_name IS NOT NULL
+  AND TRIM(p.product_category_name) <> ''
+  AND t.product_category_name IS NULL
+GROUP BY p.product_category_name
+ORDER BY occurrence_count DESC;
+Observation:
+-- The query identified the following untranslated categories:
+-- portateis_cozinha_e_preparadores_de_alimentos = 20
+-- pc_gamer = 6
+-- Therefore, 26 product records belong to categories that do not have corresponding English translations.
+Conclusion:
+-- The two untranslated categories affect a total of 26 product records.
+-- These records do not represent missing product categories;
+-- rather, they represent valid category values that are absent from the translation lookup table.
+
+9.7 TABLE 9 OVERALL RELATIONSHIP SUMMARY
+-- The product_category_name_translation table is a lookup table that provides English translations for Portuguese product
+-- category names contained in the products table.
+-- Primary Key:
+-- product_category_name_translation.product_category_name
+-- product_category_name uniquely identifies all 71 records
+-- and contains no NULL or blank values.
+-- Therefore, product_category_name is confirmed as the primary key of the translation table.
+-- Relationship:
+-- olist_products_dataset.product_category_name            ↓
+-- product_category_name_translation.product_category_name
+-- The translation table contains 71 distinct categories, and all 71 have corresponding category values in the products table.
+-- Therefore, no orphan category records were identified in the translation table.
+-- However, the products table contains two actual category values that are absent from the translation table:
+-- portateis_cozinha_e_preparadores_de_alimentos → 20 records
+-- pc_gamer                                      → 6 records
+-- Total affected product records = 26
+-- In addition, the products table contains 1,220 blank/whitespace-only product_category_name values. 
+-- These are missing category values rather than untranslated categories and were assessed separately in Table 7.
+-- Overall conclusion:
+-- product_category_name is confirmed as the primary key of the product_category_name_translation table because it is
+-- unique and contains no NULL or blank values.
+-- The relationship between the translation table and the products table is valid in the translation-to-products
+-- direction because all 71 translation categories exist in the products table.
+-- However, the relationship is not complete in the products-to-translation direction because two actual product categories 
+-- are missing from the translation table.
+-- Therefore, the category translation relationship contains a minor data-quality issue affecting 26 product records,
+-- while the translation lookup table itself contains no duplicate, NULL, blank, or orphan category records.
