@@ -1109,3 +1109,236 @@ Conclusion:
 -- no associated image. However, zero physical measurements, zero text lengths, and empty product categories should be flagged for further review.
 -- These identified values should be considered during data cleaning and transformation to prevent potential distortion
 -- of product, logistics, and supply chain analyses.
+
+Table 8: olist_sellers_dataset
+Invalid Value Assessment
+8.1 NEGATIVE SELLER ZIP CODE PREFIX ASSESSMENT
+Objective:
+-- Determine whether any seller records contain negative values in seller_zip_code_prefix.
+SQL Query:
+SELECT
+    COUNT(*) AS negative_seller_zip_codes
+FROM olist_sellers_dataset
+WHERE seller_zip_code_prefix < 0;
+Observation:
+-- The query returned 0 records.
+-- This indicates that no negative seller ZIP code prefix values were identified in the olist_sellers_dataset table.
+Conclusion:
+-- No invalid negative values were identified in seller_zip_code_prefix.
+
+8.2 ZERO SELLER ZIP CODE PREFIX ASSESSMENT
+Objective:
+-- Determine whether any seller records contain a seller ZIP code prefix value of zero.
+SQL Query:
+SELECT
+    COUNT(*) AS zero_seller_zip_codes
+FROM olist_sellers_dataset
+WHERE seller_zip_code_prefix = 0;
+Observation:
+-- The query returned 0 records.
+-- This indicates that no seller ZIP code prefix values of zero were identified in the table.
+Conclusion:
+-- No zero seller ZIP code prefix values were identified.
+-- Therefore, no potentially invalid zero values were identified in seller_zip_code_prefix.
+
+8.3 EMPTY SELLER CITY ASSESSMENT
+Objective:
+-- Determine whether any seller records contain empty or whitespace-only values in seller_city.
+SQL Query:
+SELECT
+    COUNT(*) AS empty_seller_cities
+FROM olist_sellers_dataset
+WHERE TRIM(seller_city) = '';
+Observation:
+-- The query returned 0 record.
+-- This indicates that no empty or whitespace-only seller city values were identified in the table.
+Conclusion:
+-- No empty seller city values were identified in seller_city.
+
+8.4 SELLER STATE VALUE ASSESSMENT
+Objective:
+-- Identify the distinct values present in seller_state and determine whether they represent recognized Brazilian state or federal district abbreviations.
+SQL Query:
+SELECT DISTINCT
+    seller_state
+FROM olist_sellers_dataset
+ORDER BY seller_state;
+Observation:
+The query returned the following distinct seller_state values:
+-- AC
+-- AM
+-- BA
+-- CE
+-- DF
+-- ES
+-- GO
+-- MA
+-- MG
+-- MS
+-- MT
+-- PA
+-- PB
+-- PE
+-- PI
+-- PR
+-- RJ
+-- RN
+-- RO
+-- RS
+-- SC
+-- SE
+-- SP
+-- All observed values correspond to recognized Brazilian state or federal district abbreviations.
+Conclusion:
+-- No unexpected seller_state values were identified.
+-- The observed seller_state values conform to the expected Brazilian state and federal district abbreviation format.
+
+8.5 INVALID SELLER STATE VALUE ASSESSMENT
+Objective:
+-- Determine whether any seller records contain seller_state values outside the recognized Brazilian state and federal district abbreviations.
+SQL Query:
+SELECT
+    seller_state,
+    COUNT(*) AS occurrence_count
+FROM olist_sellers_dataset
+WHERE seller_state NOT IN (
+    'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF',
+    'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA',
+    'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS',
+    'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+)
+GROUP BY seller_state
+ORDER BY occurrence_count DESC;
+Observation:
+-- The query returned an empty result.
+-- This indicates that no seller_state values were found outside the recognized Brazilian state and federal district abbreviations.
+Conclusion:
+-- No invalid seller_state values were identified in the olist_sellers_dataset table.
+
+8.6 SELLER CITY PLACEHOLDER VALUE ASSESSMENT
+Objective:
+-- Determine whether seller_city contains suspicious placeholder values such as unknown, undefined, not_defined, n/a, or null.
+SQL Query:
+SELECT
+    seller_city,
+    COUNT(*) AS occurrence_count
+FROM olist_sellers_dataset
+WHERE LOWER(TRIM(seller_city)) IN (
+    'unknown',
+    'undefined',
+    'not_defined',
+    'n/a',
+    'na',
+    'null'
+)
+GROUP BY seller_city
+ORDER BY occurrence_count DESC;
+Observation:
+-- The query returned an empty result.
+-- This indicates that no suspicious placeholder values were identified in seller_city.
+Conclusion:
+-- No suspicious placeholder values were identified in seller_city.
+
+8.7 OVERALL INVALID VALUE ASSESSMENT
+Objective:
+-- Summarize the invalid value findings identified in the olist_sellers_dataset table.
+Observation:
+-- The invalid value assessment identified no negative or zero seller ZIP code prefix values.
+-- No empty or whitespace-only seller city values were identified.
+-- All observed seller_state values correspond to recognized Brazilian state or federal district abbreviations.
+-- No invalid seller_state values were identified.
+-- No suspicious placeholder values were identified in seller_city.
+Conclusion:
+-- The olist_sellers_dataset table contains no identified invalid values across the assessed seller ZIP code, city, and state attributes.
+-- No negative or zero seller ZIP code prefix values, empty seller city values, invalid seller state codes, or suspicious seller
+-- city placeholder values were identified.
+-- Therefore, no invalid value treatment is required for the assessed fields at this stage of the Data Quality Assessment.
+
+Table 9: product_category_name_translation
+9.1 EMPTY PRODUCT CATEGORY NAME ASSESSMENT
+Objective:
+-- Determine whether any records contain empty or whitespace-only values in product_category_name.
+SQL Query:
+SELECT
+    COUNT(*) AS empty_product_categories
+FROM product_category_name_translation
+WHERE TRIM(product_category_name) = '';
+Observation:
+-- The query returned 0 records.
+-- This indicates that no empty or whitespace-only values were identified in product_category_name.
+Conclusion:
+-- No empty product category names were identified in product_category_name.
+
+9.2 EMPTY ENGLISH PRODUCT CATEGORY ASSESSMENT
+Objective:
+-- Determine whether any records contain empty or whitespace-only values in product_category_name_english.
+SQL Query:
+SELECT
+    COUNT(*) AS empty_english_categories
+FROM product_category_name_translation
+WHERE TRIM(product_category_name_english) = '';
+Observation:
+-- The query returned 0 records.
+-- This indicates that no empty or whitespace-only values were identified in product_category_name_english.
+Conclusion:
+-- No empty English product category values were identified in product_category_name_english.
+
+9.3 PRODUCT CATEGORY PLACEHOLDER VALUE ASSESSMENT
+Objective:
+-- Determine whether either product category column contains suspicious placeholder values such as unknown, undefined, not_defined, n/a, or null.
+SQL Query:
+SELECT
+    product_category_name,
+    product_category_name_english
+FROM product_category_name_translation
+WHERE LOWER(TRIM(product_category_name)) IN (
+    'unknown',
+    'undefined',
+    'not_defined',
+    'n/a',
+    'na',
+    'null'
+)
+OR LOWER(TRIM(product_category_name_english)) IN (
+    'unknown',
+    'undefined',
+    'not_defined',
+    'n/a',
+    'na',
+    'null'
+);
+Observation:
+-- The query returned an empty result.
+-- This indicates that no suspicious placeholder values were identified in either product category column.
+Conclusion:
+-- No suspicious placeholder category values were identified in the product_category_name_translation table.
+
+9.4 ENGLISH PRODUCT CATEGORY CHARACTER VALIDATION
+Objective:
+-- Determine whether any English product category values contain no alphabetic characters and may therefore represent invalid category values.
+SQL Query:
+SELECT
+    product_category_name,
+    product_category_name_english
+FROM product_category_name_translation
+WHERE product_category_name_english NOT REGEXP '[A-Za-z]';
+Observation:
+-- The query returned an empty result.
+-- This indicates that all product_category_name_english values contain at least one alphabetic character.
+Conclusion:
+-- No English product category values consisting entirely of non-alphabetic characters were identified.
+
+9.5 OVERALL INVALID VALUE ASSESSMENT
+Objective:
+-- Summarize the invalid value findings identified in the product_category_name_translation table.
+Observation:
+-- No empty or whitespace-only values were identified in product_category_name.
+-- No empty or whitespace-only values were identified in product_category_name_english.
+-- No suspicious placeholder values such as unknown, undefined, not_defined, n/a, or null were identified in either category column.
+-- No English product category values consisting entirely of non-alphabetic characters were identified.
+Conclusion:
+-- The product_category_name_translation table contains no identified invalid values across the assessed category fields.
+-- The assessed product category values are populated and do not contain suspicious placeholder values or structurally invalid English category values.
+-- Therefore, no invalid value treatment is required for the assessed fields at this stage of the Data Quality Assessment.
+-- Cross-table category mapping issues, such as product categories in olist_products_dataset without corresponding translation
+-- records, are assessed separately under reference-data and cross-table consistency assessments.
