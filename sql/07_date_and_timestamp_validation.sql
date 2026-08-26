@@ -263,3 +263,189 @@ Observation:
 Conclusion:
 -- The review timestamp columns pass the assessed completeness and chronological consistency validations.
 -- However, one review record contains invalid zero-date placeholder values in both timestamp columns and should be flagged for treatment during data cleaning.
+
+TABLE 6: olist_orders_dataset
+DATE & TIMESTAMP VALIDATION
+
+6.1 ZERO-DATE VALIDATION
+OBJECTIVE: 
+-- To identify invalid zero-date values represented as '0000-00-00 00:00:00' in the date and timestamp columns.
+SQL QUERY:
+   SELECT
+       SUM(order_purchase_timestamp = '0000-00-00 00:00:00') AS
+           invalid_purchase_dates,
+       SUM(order_approved_at = '0000-00-00 00:00:00') AS
+           invalid_approval_dates,
+       SUM(order_delivered_carrier_date = '0000-00-00 00:00:00') AS
+           invalid_carrier_dates,
+       SUM(order_delivered_customer_date = '0000-00-00 00:00:00') AS
+           invalid_customer_delivery_dates,
+       SUM(order_estimated_delivery_date = '0000-00-00 00:00:00') AS
+           invalid_estimated_delivery_dates
+   FROM olist_orders_dataset;
+
+OBSERVATION:
+Zero-date values were identified in:
+-- order_approved_at: 160
+-- order_delivered_carrier_date: 1,783
+-- order_delivered_customer_date: 2,965
+No zero-date values were identified in:
+-- order_purchase_timestamp
+-- order_estimated_delivery_date
+-- Further investigation identified 8 orders with an order_status of 'delivered' and a zero order_delivered_customer_date.
+-- One of these records also had a zero order_delivered_carrier_date.
+CONCLUSION:
+-- Zero-date values are present in the dataset and represent missing or invalid timestamps.
+-- They should be handled during data cleaning, while considering the order status and stage of the order process.
+
+6.2 PURCHASE → APPROVAL VALIDATION
+OBJECTIVE:
+-- To determine whether any order was approved before its purchase timestamp.
+SQL QUERY:
+   SELECT
+       order_id,
+       order_purchase_timestamp,
+       order_approved_at
+   FROM olist_orders_dataset
+   WHERE YEAR(order_purchase_timestamp) <> 0
+     AND YEAR(order_approved_at) <> 0
+     AND order_approved_at < order_purchase_timestamp;
+OBSERVATION:
+-- The query returned 0 records.
+CONCLUSION:
+-- No chronological inconsistencies were identified between order purchase and order approval timestamps.
+
+6.3 APPROVAL → CARRIER VALIDATION
+OBJECTIVE:
+-- To identify orders where the carrier delivery timestamp occurred before the order approval timestamp.
+SQL QUERY:
+   SELECT
+       order_id,
+       order_status,
+       order_purchase_timestamp,
+       order_approved_at,
+       order_delivered_carrier_date
+   FROM olist_orders_dataset
+   WHERE YEAR(order_approved_at) <> 0
+     AND YEAR(order_delivered_carrier_date) <> 0
+     AND order_delivered_carrier_date < order_approved_at
+   ORDER BY order_approved_at
+   LIMIT 20;
+OBSERVATION:
+-- The initial count identified 1,359 inconsistent records.
+-- A sample of 20 records was reviewed and confirmed that carrier delivery timestamps occurred before approval timestamps, 
+-- with differences ranging from minutes to several days.
+CONCLUSION:
+   The 1,359 records represent chronological inconsistencies
+   between approval and carrier delivery timestamps and should
+   be flagged during data cleaning.
+
+6.4 CARRIER → CUSTOMER DELIVERY VALIDATION
+OBJECTIVE:
+-- To identify orders where the customer delivery timestamp occurred before the carrier delivery timestamp.
+SQL QUERY:
+   SELECT
+       order_id,
+       order_status,
+       order_delivered_carrier_date,
+       order_delivered_customer_date
+   FROM olist_orders_dataset
+   WHERE YEAR(order_delivered_carrier_date) <> 0
+     AND YEAR(order_delivered_customer_date) <> 0
+     AND order_delivered_customer_date < order_delivered_carrier_date
+   ORDER BY order_delivered_carrier_date
+   LIMIT 20;
+OBSERVATION:
+-- The validation identified 23 inconsistent records.
+-- Sampled records confirmed that customer delivery timestamps occurred before the corresponding carrier delivery timestamps.
+CONCLUSION:
+-- The 23 records represent chronological inconsistencies between carrier delivery and customer delivery timestamps and should be flagged during data cleaning.
+
+6.5 PURCHASE → CUSTOMER DELIVERY VALIDATION
+OBJECTIVE:
+-- To determine whether any customer delivery occurred before the corresponding order purchase timestamp.
+SQL QUERY:
+   SELECT
+       COUNT(*) AS inconsistent_purchase_delivery
+   FROM olist_orders_dataset
+   WHERE YEAR(order_purchase_timestamp) <> 0
+     AND YEAR(order_delivered_customer_date) <> 0
+     AND order_delivered_customer_date < order_purchase_timestamp;
+OBSERVATION:
+-- The query returned 0 records.
+CONCLUSION:
+-- No chronological inconsistencies were identified between order purchase and customer delivery timestamps.
+
+6.6 ACTUAL VS ESTIMATED DELIVERY VALIDATION
+OBJECTIVE:
+-- To compare the actual customer delivery date with the estimated delivery date and determine whether orders were delivered early, on time, or late.
+SQL QUERY:
+   SELECT
+       CASE
+           WHEN order_delivered_customer_date < order_estimated_delivery_date
+               THEN 'early'
+           WHEN order_delivered_customer_date = order_estimated_delivery_date
+               THEN 'on_time'
+           WHEN order_delivered_customer_date > order_estimated_delivery_date
+               THEN 'late'
+       END AS delivery_performance,
+       COUNT(*) AS occurrence_count
+   FROM olist_orders_dataset
+   WHERE YEAR(order_delivered_customer_date) <> 0
+     AND YEAR(order_estimated_delivery_date) <> 0
+   GROUP BY delivery_performance
+   ORDER BY occurrence_count DESC;
+OBSERVATION:
+Among orders with valid actual and estimated delivery dates:
+-- Early: 88,649
+-- Late: 7,827
+-- On time: 0
+-- A total of 96,476 orders were included in the comparison.
+CONCLUSION:
+-- Most orders were delivered earlier than their estimated delivery dates, while 7,827 orders were delivered later.
+-- No orders were delivered exactly on the estimated delivery date.
+OVERALL CONCLUSION:
+-- The date and timestamp validation identified zero-date values and chronological inconsistencies in the olist_orders_dataset.
+No inconsistencies were found between:
+-- Purchase → Approval
+-- Purchase → Customer Delivery
+Chronological inconsistencies were identified in:
+-- Approval → Carrier: 1,359 records
+-- Carrier → Customer Delivery: 23 records
+Delivery performance analysis showed:
+-- 88,649 orders delivered early
+-- 7,827 orders delivered late
+-- 0 orders delivered exactly on the estimated date
+--These findings should be considered during data cleaning before conducting delivery-time and supply-chain performance analysis.
+
+TABLE 7: olist_products_dataset
+DATE & TIMESTAMP VALIDATION
+OBJECTIVE:
+-- To determine whether the olist_products_dataset contains date or timestamp columns requiring date validation.
+SQL QUERY:
+   DESCRIBE olist_products_dataset;
+OBSERVATION:
+-- The table contains product attributes and measurements but does not contain any date or timestamp columns.
+CONCLUSION:
+-- No date or timestamp validation was required for this table.
+
+TABLE 8: olist_sellers_dataset
+DATE & TIMESTAMP VALIDATION
+OBJECTIVE:
+-- To determine whether the olist_sellers_dataset contains date or timestamp columns requiring date validation.
+SQL QUERY:
+   DESCRIBE olist_sellers_dataset;
+OBSERVATION:
+-- The table contains seller identification and location information but does not contain any date or timestamp columns.
+CONCLUSION:
+-- No date or timestamp validation was required for this table.
+TABLE 9: product_category_name_translation
+DATE & TIMESTAMP VALIDATION
+OBJECTIVE:
+-- To determine whether the product_category_name_translation table contains date or timestamp columns requiring date validation.
+SQL QUERY:
+   DESCRIBE product_category_name_translation;
+OBSERVATION:
+-- The table contains product category names and their English translations but does not contain any date or timestamp columns.
+CONCLUSION:
+-- No date or timestamp validation was required for this table.
