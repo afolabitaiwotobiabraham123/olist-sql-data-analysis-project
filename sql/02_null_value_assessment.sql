@@ -215,7 +215,7 @@ The query returned 0 NULL values for all 4 columns.
 -- seller_id: 0 NULL values
 -- seller_zip_code_prefix: 0 NULL values
 -- seller_city: 0 NULL values
--- seller_state: 0 NULL values
+-- seller_state: 0 NULL values 
 Conclusion:
 -- No NULL values were identified in the olist_sellers_dataset table. 
 -- Therefore, no NULL value treatment is required for this table at this stage of the Data Quality Assessment.
