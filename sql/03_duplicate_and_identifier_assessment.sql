@@ -4,7 +4,7 @@ Objective:
 -- Check for exact duplicate records in the olist_geolocation_dataset table.
 SQL Query:
 SELECT
-    geolocation_zip_code_prefix,
+    geolocation_zip_code_prefix, 
     geolocation_lat,
     geolocation_lng,
     geolocation_city,
