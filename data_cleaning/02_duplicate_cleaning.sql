@@ -5,7 +5,7 @@ TOPIC: Duplicate Record Cleaning
 
 OBJECTIVE
 Remove confirmed redundant duplicate records from the Olist dataset while preserving the original/raw tables.
-
+ 
 CLEANING PRINCIPLE
 1. Never modify the original/raw tables directly.
 2. Clean only duplicates that were confirmed during the duplicate assessment.
