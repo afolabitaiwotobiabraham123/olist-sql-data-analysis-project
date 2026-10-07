@@ -1,6 +1,6 @@
 Invalid Value Assessment
 Table 1: olist_customers_dataset
-1.1 INVALID VALUE ASSESSMENT: customer_zip_code_prefix — RANGE INSPECTION
+1.1 INVALID VALUE ASSESSMENT: customer_zip_code_prefix — RANGE INSPECTION 
 Objective:
 -- Determine the minimum and maximum values of customer_zip_code_prefix to identify any obvious values outside the expected numerical structure 
 -- of Brazilian ZIP code prefixes.
