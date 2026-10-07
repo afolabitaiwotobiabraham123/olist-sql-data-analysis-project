@@ -10,7 +10,7 @@ Table 2: olist_geolocation_dataset
 Date and Timestamp Validation
 Assessment:
 -- Date and timestamp validation is not applicable to the olist_geolocation_dataset table because the table contains no DATE or DATETIME columns.
-Conclusion:
+Conclusion: 
 -- No date or timestamp fields were identified in the table;
 -- therefore, no date or timestamp validation was required.
 
