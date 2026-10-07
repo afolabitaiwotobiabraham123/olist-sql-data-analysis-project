@@ -456,7 +456,7 @@ Objective:
 -- Determine whether product_category_name contains values that are not represented as valid categorical values within the dataset.
 SQL Query:
 SELECT
-    product_category_name,
+    product_category_name, 
     COUNT(*) AS occurrence_count
 FROM olist_products_dataset
 WHERE product_category_name IS NOT NULL
