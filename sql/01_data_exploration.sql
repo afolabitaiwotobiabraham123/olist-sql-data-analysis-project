@@ -4,7 +4,7 @@ Phase 1: Data Exploration
 Step 1: Explore Database Tables
 Objective:
 -- Identify all tables available in the Olist database.
-SQL Query:
+SQL Query: 
 -- SHOW TABLES;
 Observation:
 The Olist database contains 9 tables:
